@@ -6,7 +6,7 @@
       "request": "launch",
       "module": "lb",
       "justMyCode": true
-    },
+    }
   ],
   "version": "0.2.0"
 }

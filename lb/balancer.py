@@ -1,90 +1,40 @@
-import time
-
-from multiprocessing import Manager, Process
-
+from time import sleep
+from multiprocessing import Manager
+from typing import Callable
 from lb.request import Request
-
-from lb.worker import Worker
 
 
 class Balancer:
     def __init__(self, nWorker: int):
+        _manager = Manager()
+
+        # queue to notify work has been done
+        # in bound notification of completed work
+        self.notify_work_done_queue = _manager.Queue()
+        # outbound distribution of work
+        self.work_requests_queue = _manager.Queue()
+
         # cab rank of workers
         self.worker_pool = []
-        self.process_pool = []
 
-        # pipe to notify work has been done
+        self.work_sent = dict()
+        self.num_requests_at_workers = 0
 
-        self.done = Manager().Queue()
+    def balance_work(self):
+        process_requests = True
+        while process_requests:
+            # empty work done
+            #
+            # empty work_requests
+            while not self.work_requests_queue.empty():
+                sleep(0.5)
 
-        self.next = 0
+                r: Request = self.work_requests_queue.get()
+                if r is None:
+                    process_requests = False
+                    break
+                print(f"Doing {r}")
+                r.do_work()
 
-        self.work_sent = 0
-
-        self.work_done = 0
-
-        for i in range(nWorker):
-            w = Worker()
-            self.worker_pool.append(w)
-
-            p = Process(target=w.work, args=(self.done,))
-            p.start()
-            self.process_pool.append(p)
-
-    def dispatch(self, req: Request):
-        # get least loaded worker
-
-        w: Worker = self.worker_pool[self.next]
-
-        w.requests.put(req)
-
-        w.pending = w.pending + 1
-
-        self.next = (self.next + 1) % len(self.worker_pool)
-
-        self.work_sent += 1
-
-    def completed(self, w: Worker):
-        w.pending = w.pending - 1
-
-        self.work_done += 1
-
-    def balance(self, work):
-        is_work = True
-        last_work = time.time()
-
-        while is_work or self.work_done < self.work_sent:
-            # drain work in
-
-            work_found = False
-
-            while not work.empty():
-                work_found = True
-
-                req: Request = work.get()
-
-                print(f"BAL,{req}")
-
-                self.dispatch(req)
-
-            if work_found:
-                last_work = time.time()
-
-            if time.time() - last_work > 5:
-                is_work = False
-
-            # drain work done
-
-            while not self.done.empty():
-                w: Worker = self.done.get()
-
-                self.completed(w)
-
-        for w in self.worker_pool:
-            w.requests.put(-1)
-
-
-        # for p in self.process_pool:
-        #     p.join()
-
-        # print(f"{self.work_done}/{self.work_sent:}")
+    def shutdown(self):
+        pass
