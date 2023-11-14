@@ -18,7 +18,8 @@ class Request:
         self.args = args
         self.requested_at = time.time()
 
-    def do_work(self):
+    def execute_request(self):
+        print(f"Executing {self.fn.__name__}")
         self.result = self.fn(*self.args)
         self.completed_at = time.time()
         self.requester_return_queue.put(self)

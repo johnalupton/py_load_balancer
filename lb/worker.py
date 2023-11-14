@@ -1,33 +1,46 @@
 import time
-from multiprocessing import Manager
+from multiprocessing import Manager, Process
+from typing import Optional
 from lb.request import Request
 from uuid import uuid4
-import lb.ids
 
 
 class Worker:
-    def __init__(self):
+    def __init__(self, notify_work_done_queue, process_index: int):
         # buffered channel of requests incoming for this worker
-        self.requests = Manager().Queue()
+        self._requests = Manager().Queue()
         # how long is request buffer to enable load balancer to balance load
-        self.pending: int = 0
-        self.id = lb.ids.worker_id
+        self._pending: int = 0
+        self._id = uuid4()
+        self._notify_work_done_queue = notify_work_done_queue
+        self.process_index = process_index
+        print(f"Creating worker {self}")
+
+    def add_request(self, req: Optional[Request]):
+        self._requests.put(req)
+
+    def shutdown(self):
+        print(f"Shutting worker {self}")
+        self.add_request(None)
+        # blocks until all work finished (i.e. queue is empty and "None" is processed)
+        # self._process.join()
 
     def __repr__(self):
-        return f"Worker:{self.id:04d}({self.pending}):"
+        return f"{str(self._id)[-6:]}"
 
     # overload requried for priority queue
-    def __lt__(lhs, rhs):
-        return lhs.pending < rhs.pending
+    def __lt__(self, rhs):
+        return self._pending < rhs.pending
 
     def __eq__(self, other):
         return self.__repr__ == other.__repr__
 
-    def work(self, done):
+    def work(self):
         while True:
-            # blocks
-            req: Request = self.requests.get()
-            if req == -1:
+            # blocking wait for next item in queue
+            req: Request = self._requests.get()
+            if req == None:
                 break
-            req.c.put(req)
-            done.put(self)
+
+            req.execute_request()
+            self._notify_work_done_queue.put(req)

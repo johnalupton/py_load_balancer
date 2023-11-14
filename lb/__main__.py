@@ -2,7 +2,7 @@ from multiprocessing import Manager, Process
 
 from lb.balancer import Balancer
 from lb.request import Request
-from lb.work_fns import weird_cube
+from lb.helpers import weird_cube
 
 
 nRequester = 2
@@ -15,13 +15,17 @@ if __name__ == "__main__":
 
     for i in range(10):
         r = Request(i, requester_return_queue, weird_cube, i, i + 1)
-        balancer.work_requests_queue.put(r)
+        balancer._work_requests_queue.put(r)
 
     # spawn non-blocking balancer
-    Process(target=balancer.balance_work).
+    p = Process(target=balancer.balance_work)
+    p.start()
 
-    # stop the balancer
-    balancer.work_requests_queue.put(None)
+    # request stop the balancer
+    balancer._work_requests_queue.put(None)
+
+    # wait for balance_work process to stop
+    p.join()
 
     balancer.shutdown()
 
