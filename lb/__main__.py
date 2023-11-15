@@ -6,12 +6,13 @@ from lb.constants import num_requesters, num_workers
 from lb.helpers import spawn_requesters, spawn_workers, stop_workers_with_blocking
 
 if __name__ == "__main__":
+    # set up manager to facilitate cross process queue sharing
     manager = Manager()
 
     # initialise balancer and workers
     balancer = Balancer(manager)
     workers = spawn_workers(num_workers, manager, balancer.done_queue)
-    balancer.workers = workers
+    balancer.workers_pool = workers
 
     # start requesters
     requesters, processes_req = spawn_requesters(
@@ -22,8 +23,8 @@ if __name__ == "__main__":
 
     # start balancer balancing
     # will start to put results into the results queues of the requesters
-    p_bal = Process(target=balancer.balance_requests)
-    p_bal.start()
+    process_bal = Process(target=balancer.balance_requests)
+    process_bal.start()
 
     # start results pollers for each requester
     # each requester has its own results notification channel
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     stop_workers_with_blocking()
 
     # wait for balancer to close
-    p_bal.join()
+    process_bal.join()
 
     # finish all results polling before exiting
     for requester in requesters:
