@@ -1,33 +1,61 @@
+import time
 from multiprocessing import Manager, Process
 
 from lb.balancer import Balancer
-from lb.request import Request
-from lb.helpers import weird_cube
-
-
-nRequester = 2
-nWorker = 5
-
+from lb.constants import num_requesters, num_workers
+from lb.helpers import spawn_requesters, spawn_workers, stop_workers_with_blocking
 
 if __name__ == "__main__":
-    balancer = Balancer(nWorker)
-    requester_return_queue = Manager().Queue()
+    manager = Manager()
 
-    for i in range(10):
-        r = Request(i, requester_return_queue, weird_cube, i, i + 1)
-        balancer._work_requests_queue.put(r)
+    # initialise balancer and workers
+    balancer = Balancer(manager)
+    workers = spawn_workers(num_workers, manager, balancer.done_queue)
+    balancer.workers = workers
 
-    # spawn non-blocking balancer
-    p = Process(target=balancer.balance_work)
-    p.start()
+    # start requesters
+    requesters, processes_req = spawn_requesters(
+        num_requesters, balancer.request_queue, manager
+    )
 
-    # request stop the balancer
-    balancer._work_requests_queue.put(None)
+    t = time.time()
 
-    # wait for balance_work process to stop
-    p.join()
+    # start balancer balancing
+    # will start to put results into the results queues of the requesters
+    p_bal = Process(target=balancer.balance_requests)
+    p_bal.start()
 
-    balancer.shutdown()
+    # start results pollers for each requester
+    # each requester has its own results notification channel
+    processes_res = []
+    for requester in requesters:
+        p = Process(target=requester.poll_results)
+        p.start()
+        processes_res.append(p)
 
-    while not requester_return_queue.empty():
-        print(f"Returned queue {requester_return_queue.get()}")
+    # balancer can be stopped once all requesters have finished requesting
+    # complete all request senders
+    for p in processes_req:
+        p.join()
+
+    balancer.stop_requests()
+
+    # block while wait for processes to stop
+    stop_workers_with_blocking()
+
+    # wait for balancer to close
+    p_bal.join()
+
+    # finish all results polling before exiting
+    for requester in requesters:
+        requester.stop_polling_results()
+
+    for p in processes_res:
+        p.join()
+
+    # processing done here
+    t = time.time() - t
+
+    # drain balancer done
+    balancer.drain_work_done()
+    print(f"elapsed time = {t}s")

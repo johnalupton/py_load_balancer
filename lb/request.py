@@ -1,29 +1,16 @@
-import time
-from typing import Callable
-
-RequestId = int
+from uuid import uuid4
 
 
 class Request:
-    def __init__(
-        self,
-        id: RequestId,
-        requester_return_queue,
-        fn: Callable,
-        *args,
-    ):
-        self.id = id
-        self.requester_return_queue = requester_return_queue
-        self.fn: Callable = fn
+    def __init__(self, results_queue, fn, *args):
+        self.fn = fn
         self.args = args
-        self.requested_at = time.time()
-
-    def execute_request(self):
-        print(f"Executing {self.fn.__name__}")
-        self.result = self.fn(*self.args)
-        self.completed_at = time.time()
-        self.requester_return_queue.put(self)
-        print(f"Work output {self.result}")
+        self.results_queue = results_queue
+        self.id = uuid4()
 
     def __repr__(self):
-        return f"{self.id}"
+        return str(self.id)[-6:]
+
+    def evaluate_and_return_result(self):
+        self.result = self.fn(*self.args)
+        self.results_queue.put(self)
