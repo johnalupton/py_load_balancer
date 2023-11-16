@@ -5,8 +5,8 @@ from lb.request import Request
 
 
 class Worker:
-    """Process to execute work defined in a Request
-    """
+    """Process to execute work defined in a Request"""
+
     def __init__(self, manager):
         # the queue of Requests that have been allocated by the Balancer to this Worker
         self.worker_request_queue = manager.Queue()
@@ -19,8 +19,7 @@ class Worker:
         return str(self.id)[-6:]
 
     def stop_working(self):
-        """Send a STOP signal to this worker
-        """
+        """Send a STOP signal to this worker"""
         self.worker_request_queue.put(STOP)
 
     def do_work(self, done_queue):

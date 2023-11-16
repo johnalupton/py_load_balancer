@@ -1,4 +1,5 @@
 from time import sleep
+
 from lb.constants import STOP
 from lb.request import Request
 
