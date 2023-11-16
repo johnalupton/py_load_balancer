@@ -63,9 +63,9 @@ class Requester:
 
 A request object contains 3 fundamental properties
 
-   - a python `Callable` to execute, the "work"
-   - `args` the arguments to be passed to the `Callable`
-   - `results_queue` - the queue owned by the originating process for the `Worker` that executes the `Request` to send the result back to the `Requester`. The `result` of the work is added to the `Request` instance and the whole request is returned to the `Requester`
+- a python `Callable` to execute, the "work"
+- `args` the arguments to be passed to the `Callable`
+- `results_queue` - the queue owned by the originating process for the `Worker` that executes the `Request` to send the result back to the `Requester`. The `result` of the work is added to the `Request` instance and the whole request is returned to the `Requester`
 
 ```python
 class Request:
@@ -153,3 +153,69 @@ The work loop
 ## Issues
 
 1. Working with Python - not great for parallel processes, and parallelism not cheap so the approach of using Python needs to be a good fit for the problem: [useful link here](https://stackoverflow.com/a/52076791/10016858). I think this emphasises the benefits of `Go` and if I were doing this in a live situation, I would most likely use `Go` or `Rust` as "the right tool for the job" rather than dogmatically using a single language - and benchmark this against AWS.
+
+## Install and run
+
+### Install
+
+No installation - no external libraries used
+
+### run
+
+python -m lb
+
+### Output example
+
+```dos
+Request polling stopped - 20 requests received
+Requester 4eec33 result d2ba37 = 0>
+Requester 4eec33 result de8a73 = 2>
+Requester 4eec33 result ed7e24 = 3>
+Requester 4eec33 result 7312f6 = 1>
+Requester 4eec33 stop polling with 4 received results
+Requester 9c76b6 result 4525d9 = 3>
+Requester 9c76b6 result ad4a17 = 0>
+Requester 9c76b6 result bc53dc = 1>
+Requester 9c76b6 result b23352 = 2>
+Requester 9c76b6 stop polling with 4 received results
+Requester ceb701 result 44f0af = 0>
+Requester ceb701 result a0a884 = 3>
+Requester ceb701 result 898421 = 2>
+Requester ceb701 result 1180f5 = 1>
+Requester ceb701 stop polling with 4 received results
+Requester 773f0c result ed2daf = 1>
+Requester 773f0c result d0aac6 = 0>
+Requester 773f0c result 158d1d = 2>
+Requester 773f0c result 01de2e = 3>
+Requester 773f0c stop polling with 4 received results
+Requester e667a3 result 2466be = 0>
+Requester e667a3 result f787ca = 1>
+Requester e667a3 result 488e44 = 3>
+Requester e667a3 result 47a737 = 2>
+Requester e667a3 stop polling with 4 received results
+Done request 44f0af with result 0
+Done request a0a884 with result 3
+Done request 898421 with result 2
+Done request d2ba37 with result 0
+Done request de8a73 with result 2
+Done request 1180f5 with result 1
+Done request ed7e24 with result 3
+Done request ed2daf with result 1
+Done request 7312f6 with result 1
+Done request d0aac6 with result 0
+Done request 158d1d with result 2
+Done request 4525d9 with result 3
+Done request ad4a17 with result 0
+Done request 2466be with result 0
+Done request f787ca with result 1
+Done request bc53dc with result 1
+Done request 01de2e with result 3
+Done request 488e44 with result 3
+Done request 47a737 with result 2
+Done request b23352 with result 2
+20 requests were done
+elapsed time = 8.438602685928345s
+10 workers
+5 requesters
+4 requests per requester
+```

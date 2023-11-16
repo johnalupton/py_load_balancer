@@ -2,7 +2,7 @@ import time
 from multiprocessing import Manager, Process
 
 from lb.balancer import Balancer
-from lb.constants import num_requesters, num_workers
+from lb.constants import num_requesters, num_workers, num_requests_per_requester
 from lb.helpers import spawn_requesters, spawn_workers, stop_workers_with_blocking
 
 if __name__ == "__main__":
@@ -60,3 +60,6 @@ if __name__ == "__main__":
     # drain balancer done
     balancer.drain_work_done()
     print(f"elapsed time = {t}s")
+    print(f"{num_workers} workers")
+    print(f"{num_requesters} requesters")
+    print(f"{num_requests_per_requester} requests per requester")
