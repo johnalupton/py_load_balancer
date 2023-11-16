@@ -10,11 +10,9 @@ I was reading about `Go` and was impressed with how it has 3 useful features for
 
 Concurrency as a design approach seems to be concerned with independently **dealing with** a lot of "things" (functions, processes) at once (i.e. solution structure) as opposed to parallelism **doing** a lot of things at once.
 
-Concurrent design leads to independent processes, but we have to make processes communicate.
+Concurrent design leads to independent processes, so creates the nned for inter-processes communication.
 
-I wanted to investigate how to set up a generic concurrent processing architecture. To be concurrent (and not cooperative multitasking), I used the python `multiprocessing.Process` rather than `asyncio`, `concurrent.futures` or `multiprocessing.Thread` libraries.
-
-Also to keep the implementation close to the conceptual design without using too many language specific features, `multiprocssing.Pool` is not used. The pool is managed by the `Balancer` to enable load-based balancing.
+I wanted to investigate how to set up a generic concurrent processing architecture, with as little language specificit as possible. To be concurrent (and not cooperative multitasking), I used the Python `multiprocessing.Process` as this is the simplest "spawn process" functionality rather than `asyncio`, `concurrent.futures` or `multiprocessing.Thread` libraries. `asyncio` and `multiprocessing.Thread` are concerned with I/O bound processes and use cooperative multitasking (essentially an intelligent single thread). `concurrent.futures` uses pool-based multiple processes but I wanted to not use language-dependent pool management to keep the implementation structurally close to the design. Similarly for `multiprocssing.Pool`. The pool is managed by the `Balancer` to enable load-based balancing.
 
 In this architecture, a variable number of `Requester`s send `Requests` to a single `Balancer` via a single FIFO request queue (`multiprocessing.Queue`).
 
@@ -25,24 +23,25 @@ The concurrency is facilitated from a design point of view by:
 - the work being load balanced among a number of `Worker`s
 - the request containing a "return result" queue which enables the `Worker` carrying out the work to communicate the result of the work directly back to the `Requester`. The `Balancer` simply distributes work, it avoids becoming a bottle-neck/creating performance side-effects by **not becoming involved in the relaying of results**.
 
-![archotecture](py_load_balancer.png)
+![archotecture](py_load_balancer.svg)
 
-The important `Queue`s in the design are (following the flow of processing)
+The important `Queue`s in the design are (following the flow of processing, same num bers as diagram)
 
 1. `Balancer.request_queue` - the queue owned by the `Balancer`, onto which the `Requester`s send their `Requests`
 
 2. `Worker.worker_request_queue` - the queue, owned by the `Worker` instance, onto which the `Balancer` `put`s work to be done
 
-3. `Requester.results_queue` - the queue added to the `Request` to enable the `Worker` to communicate the result of the `Request` **directly** back to the `Requester`
-4. `Balancer.work_done_queue` - the queue owned by the `Balancer`, passed to the `Worker` instance on creation which enables the worker to communicate back to the `Balancer` work done. This enables (not implemented) the `Balancer` to audit work received = work done.
+3a. `Balancer.work_done_queue` - the queue owned by the `Balancer`, passed to the `Worker` instance on creation which enables the worker to communicate back to the `Balancer` work done. This enables (not implemented) the `Balancer` to audit work received = work done.
+
+3b. `Requester.results_queue` - the queue added to the `Request` to enable the `Worker` to communicate the result of the `Request` **directly** back to the `Requester`
 
 ## Features of each class
 
 ### `Requester`
 
-The process generating the requests is non-proscriptive: The `Request` simply needs to contain a `Callable` and the arguments to pass to that `Callable` (implemented as `*args`).
+The process generating the `Request`s is non-proscriptive: The `Request` simply needs to contain a `Callable` and the arguments to pass to that `Callable` (implemented as `*args`). The `Queue` to return results to the `Requester` is also added at the point of submission to the `Balancer`
 
-This means that any number of heterogenous `Requester`s (work creators) can be attached to the `Balancer` with the condition that the function is stateless first class function.
+This means that any number of heterogenous `Requester`s (work creators) can be attached to the `Balancer` with the condition that the function is stateless, first class function.
 
 ```python
 class Requester:
@@ -64,9 +63,9 @@ class Requester:
 
 A request object contains 3 fundamental properties
 
-- a python `Callable` to execute, the "work"
-- `args` the arguments to be passed to the `Callable`
-- `results_queue` - the queue owned by the originating process for the `Worker` that executes the `Request` to send the result back to the `Requester`. The `result` of the work is added to the `Request` instance and the whole request is returned to the `Requester`
+   - a python `Callable` to execute, the "work"
+   - `args` the arguments to be passed to the `Callable`
+   - `results_queue` - the queue owned by the originating process for the `Worker` that executes the `Request` to send the result back to the `Requester`. The `result` of the work is added to the `Request` instance and the whole request is returned to the `Requester`
 
 ```python
 class Request:
@@ -145,12 +144,12 @@ The work loop
 
 1. The design is scalable and needs no locks dues to the use of FIFO queues
 
-2. The system can be parallelised this with more `Workers`, more `Requester`s/work generators but this is not necessary: It will work with one `Worker` and one `Requester`: Parallelism is not necessary.
+2. The system can be parallelised with more `Workers`, more `Requester`s/work generators but this is not necessary: It will work with one `Worker` and one `Requester`: Parallelism is not necessary.
 
 3. It therefor follows that you can dynamically add (more, more powerful)/remove (costly, redundant) resources
 
-4. Any of the `Queue`s could be replaced with a network implementation (Python, ZeroMQ etc) and move to a distributed microservices architecture.
+4. Any of the `Queue`s could be replaced with a network implementation (Python remote managers, ZeroMQ, Redis etc) and move to a distributed microservices architecture.
 
 ## Issues
 
-1. Workign with Python - not great for parallel, parallelism not cheap so the approach if using Python needs to be a good fit for the problem: [useful link here](https://stackoverflow.com/a/52076791/10016858)
+1. Working with Python - not great for parallel processes, and parallelism not cheap so the approach of using Python needs to be a good fit for the problem: [useful link here](https://stackoverflow.com/a/52076791/10016858). I think this emphasises the benefits of `Go` and if I were doing this in a live situation, I would most likely use `Go` or `Rust` as "the right tool for the job" rather than dogmatically using a single language - and benchmark this against AWS.
