@@ -31,9 +31,10 @@ The important `Queue`s in the design are (following the flow of processing, same
 
 2. `Worker.worker_request_queue` - the queue, owned by the `Worker` instance, onto which the `Balancer` `put`s work to be done
 
-3a. `Balancer.work_done_queue` - the queue owned by the `Balancer`, passed to the `Worker` instance on creation which enables the worker to communicate back to the `Balancer` work done. This enables (not implemented) the `Balancer` to audit work received = work done.
+3. `Requester.results_queue` - the queue added to the `Request` to enable the `Worker` to communicate the result of the `Request` **directly** back to the `Requester`
 
-3b. `Requester.results_queue` - the queue added to the `Request` to enable the `Worker` to communicate the result of the `Request` **directly** back to the `Requester`
+4. `Balancer.work_done_queue` - the queue owned by the `Balancer`, passed to the `Worker` instance on creation which enables the worker to communicate back to the `Balancer` work done. This enables (not implemented) the `Balancer` to audit work received = work done.
+
 
 ## Features of each class
 
