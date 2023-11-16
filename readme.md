@@ -168,30 +168,30 @@ python -m lb
 
 ```dos
 Request polling stopped - 20 requests received
-Requester 4eec33 result d2ba37 = 0>
-Requester 4eec33 result de8a73 = 2>
-Requester 4eec33 result ed7e24 = 3>
-Requester 4eec33 result 7312f6 = 1>
+Requester 4eec33 result d2ba37 = 0
+Requester 4eec33 result de8a73 = 2
+Requester 4eec33 result ed7e24 = 3
+Requester 4eec33 result 7312f6 = 1
 Requester 4eec33 stop polling with 4 received results
-Requester 9c76b6 result 4525d9 = 3>
-Requester 9c76b6 result ad4a17 = 0>
-Requester 9c76b6 result bc53dc = 1>
-Requester 9c76b6 result b23352 = 2>
+Requester 9c76b6 result 4525d9 = 3
+Requester 9c76b6 result ad4a17 = 0
+Requester 9c76b6 result bc53dc = 1
+Requester 9c76b6 result b23352 = 2
 Requester 9c76b6 stop polling with 4 received results
-Requester ceb701 result 44f0af = 0>
-Requester ceb701 result a0a884 = 3>
-Requester ceb701 result 898421 = 2>
-Requester ceb701 result 1180f5 = 1>
+Requester ceb701 result 44f0af = 0
+Requester ceb701 result a0a884 = 3
+Requester ceb701 result 898421 = 2
+Requester ceb701 result 1180f5 = 1
 Requester ceb701 stop polling with 4 received results
-Requester 773f0c result ed2daf = 1>
-Requester 773f0c result d0aac6 = 0>
-Requester 773f0c result 158d1d = 2>
-Requester 773f0c result 01de2e = 3>
+Requester 773f0c result ed2daf = 1
+Requester 773f0c result d0aac6 = 0
+Requester 773f0c result 158d1d = 2
+Requester 773f0c result 01de2e = 3
 Requester 773f0c stop polling with 4 received results
-Requester e667a3 result 2466be = 0>
-Requester e667a3 result f787ca = 1>
-Requester e667a3 result 488e44 = 3>
-Requester e667a3 result 47a737 = 2>
+Requester e667a3 result 2466be = 0
+Requester e667a3 result f787ca = 1
+Requester e667a3 result 488e44 = 3
+Requester e667a3 result 47a737 = 2
 Requester e667a3 stop polling with 4 received results
 Done request 44f0af with result 0
 Done request a0a884 with result 3
