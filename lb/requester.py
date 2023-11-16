@@ -68,7 +68,7 @@ class Requester:
                 else:
                     # log to stdout a valid result
                     self.results_received += 1
-                    print(f"Requester {self} result {req} = {req.result}>")
+                    print(f"Requester {self} result {req} = {req.result}")
 
         # log to stdout summary results for this Requester
         print(
