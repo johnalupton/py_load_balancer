@@ -6,13 +6,13 @@ I was reading about `Go` and was impressed with how it has 3 useful features for
 
 - `go` routines - lightweight threads
 - `channel`s (which are typed)
-- `select` statement which is a concurrent control switch - it gives the ability to listen to many channels and wait for any one to be ready to be ready
+- `select` statement which is a concurrent control switch - it gives the ability to listen to many channels and wait for any one to be ready
 
 Concurrency as a design approach seems to be concerned with independently **dealing with** a lot of "things" (functions, processes) at once (i.e. solution structure) as opposed to parallelism **doing** a lot of things at once.
 
-Concurrent design leads to independent processes, so creates the nned for inter-processes communication.
+Concurrent design leads to independent processes, so creates the need for inter-processes communication.
 
-I wanted to investigate how to set up a generic concurrent processing architecture, with as little language specificit as possible. To be concurrent (and not cooperative multitasking), I used the Python `multiprocessing.Process` as this is the simplest "spawn process" functionality rather than `asyncio`, `concurrent.futures` or `multiprocessing.Thread` libraries. `asyncio` and `multiprocessing.Thread` are concerned with I/O bound processes and use cooperative multitasking (essentially an intelligent single thread). `concurrent.futures` uses pool-based multiple processes but I wanted to not use language-dependent pool management to keep the implementation structurally close to the design. Similarly for `multiprocssing.Pool`. The pool is managed by the `Balancer` to enable load-based balancing.
+I wanted to investigate how to set up a generic concurrent processing architecture, with as little language specificity as possible. To be concurrent (and not cooperative multitasking), I used the Python `multiprocessing.Process` as this is the simplest "spawn process" functionality rather than `asyncio`, `concurrent.futures` or `multiprocessing.Thread` libraries. `asyncio` and `multiprocessing.Thread` are concerned with I/O bound processes and use cooperative multitasking (essentially an intelligent single thread). `concurrent.futures` uses pool-based multiple processes but I wanted to not use language-dependent pool management to keep the implementation structurally close to the design. Similarly for `multiprocssing.Pool` - I wanted to avoid this. The pool as implemented is managed by the `Balancer` to enable load-based balancing.
 
 In this architecture, a variable number of `Requester`s send `Requests` to a single `Balancer` via a single FIFO request queue (`multiprocessing.Queue`).
 
@@ -161,7 +161,7 @@ The work loop
 
 No installation - no external libraries used
 
-### run
+### Run
 
 python -m lb
 
